@@ -64,3 +64,86 @@ class Board :
         @property
         def victory_ways(self) :
             retrun self._victory_ways
+
+class GamePlay(object) :
+    def __ init__(self, parent) :
+        self.parent = parent
+        self.board = Board(self.parent, 100, "#ECECEC")
+        self.board.draw_board()
+        self.unused_squares_dict = self.board.get_unused_squares_dict()
+        self.player1 = Player("Player 1", "#1DE9B6")
+        self.player2 = Player("Player 2", "#FFA726")
+        self.initialize_buttons()
+        self.show_menu()
+
+    def initialize_buttons(self) :
+        self.two_players_button = tkinter.Button(self.board.container, text = "TWO PLAYERS", width = 25, command = self.init_two_players_game)
+        self.restart_button  = tkinter.Button(self.board.container, text = "RESTART", wodth = 25, command = self.restart)
+
+    def show_menu(self) :
+        self.two_players_button.grid()
+
+    def init_two_players_game(self) :
+        self.board.reset_unused_squares_dict()
+        self.player1.selected_sq = set()
+        self.player2.selected_sq = set()
+        self.player1_turn = True
+        self.restart_button.grid()
+        self.board.canvas.bind("<Button-1>", self.play)
+
+    def restart(self) :
+        self.board.container.destroy()
+        self.board = Board(self.parent, 100, "#ECECEC")
+        self.board.draw_board()
+        self.initialize_buttons()
+        self.show_menu()
+
+    def add_to_player_sq(self, key, player_sq) :
+        current_selected_sq = self.board.unused_squares_dict[key]
+        player_ssq.add(current_selected_sq)
+
+    def delete_used_sq(self, key) :
+        del self.board.unused_squares_dict[key]
+
+    def play(self, event) :
+        colrow_tuple = self.board.find_coords_of_selcted_sq(event)
+        corner_two_col, corner_two_row = colrow_tuple[0], colrow_tuple[1]
+        col_fl, row_fl = self.board.floor_of_row_col(event.x, event.y)
+        rowcol_key = self.board.convert_to_key(col_fl, row_fl)
+
+        try :
+            self.unused_squares_dict[rowcol_key]
+        except KeyError :
+            return
+
+        if self.player1_turn == True :
+            self.add_to_player_sq(rowcol_key, self.player1,selected_sq)
+            self.delete_used_sq(rowcol_key)
+            self.board.color_selected_sq(event, corner_two_col, corner_two_row, self.player1.color)
+            self.check_for_winner(self.player1.selected_sq, self.player1.name)
+            self.player1_turn = False
+
+        else :
+            self.board.color_selected_sq(event, corner_two_col, corner_two_row, self.player2.color)
+            self.add_to_player_sq(rowcol_key, self.player2.selected_sq)
+            self.delete_used_sq(rowcol_key)
+            self.check_for_winner(self.player2.selected_sq, self.player2.name)
+            self.player1_turn = True
+
+    def check_for_winner(self, player_sq, player_name) :
+        if len(self.board.unused_squares_dict) > 0 :
+            if len(player_sq) > 2 :
+                for combo in permutations(player_sq, 4) :
+                    for wc in self.board.winning_combos :
+                        if set(combo) == wc :
+                            self.show_game_result(player_name + " WIN!")
+                            self.restart
+
+        if len(self.board.unused_squares_dict) == 0 :
+            self.show_game_result("Game Tie!")
+            self.restart
+
+    def show_game_result(self, txt) :
+        result_label = tkinter.Label(self.board.container, text = txt, width = 32, height = 10, foreground = "white", background = "black", borderwidth = 3)
+        result_label.grid(row = 0, column = 0)
+        self.board.canvas.unbind("<Button-1>", self.play)
