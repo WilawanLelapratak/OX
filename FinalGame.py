@@ -147,3 +147,12 @@ class GamePlay(object) :
         result_label = tkinter.Label(self.board.container, text = txt, width = 32, height = 10, foreground = "white", background = "black", borderwidth = 3)
         result_label.grid(row = 0, column = 0)
         self.board.canvas.unbind("<Button-1>", self.play)
+
+def main() :
+    root = tkinter.Tk()
+    root.title("OX Special 4x4")
+    ox_game = GamePlay(root)
+    root.mainloop()
+
+if __name__ == '__main__' :
+    main()
